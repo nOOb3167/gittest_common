@@ -1,4 +1,7 @@
 #include <stdint.h>
+#include <cstdio>
+
+#include <sstream>
 
 #include <gittest/misc.h>
 
@@ -31,5 +34,13 @@ int gs_log_unified_message_log(
 	const char *CppFile,
 	int CppLine)
 {
+	std::stringstream ss;
+	ss  << "[" + std::string(Prefix) + "] "
+		<< "[" + std::string(MsgBuf, MsgSize) << "]"
+		<< std::endl;
+
+	/* write to stdout as debug aid */
+	printf("%s", ss.str().c_str());
+
 	return 0;
 }
