@@ -431,6 +431,28 @@ clean:
 	return r;
 }
 
+int gs_directory_create_unless_exist(
+	const char *DirNameBuf, size_t LenDirName)
+{
+	int r = 0;
+
+	if (!!(r = gs_buf_ensure_haszero(DirNameBuf, LenDirName + 1)))
+		GS_GOTO_CLEAN();
+
+	if (!CreateDirectory(DirNameBuf, NULL)) {
+		DWORD Error = GetLastError();
+		if (Error == ERROR_ALREADY_EXISTS)
+			GS_ERR_NO_CLEAN(0);
+		GS_ERR_CLEAN(1);
+	}
+
+noclean:
+
+clean:
+
+	return r;
+}
+
 int gs_process_start(
 	const char *FileNameParentBuf, size_t LenFileNameParent,
 	const char *CmdLineBuf, size_t LenCmdLine)

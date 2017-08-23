@@ -41,6 +41,9 @@ int gs_rename_wrapper(
 	const char *SrcFileNameBuf, size_t LenSrcFileName,
 	const char *DstFileNameBuf, size_t LenDstFileName);
 
+int gs_directory_create_unless_exist(
+	const char *DirNameBuf, size_t LenDirName);
+
 /* unportable / platform specific */
 
 int gs_process_start(
