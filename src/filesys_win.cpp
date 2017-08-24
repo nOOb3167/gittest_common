@@ -454,95 +454,95 @@ clean:
 }
 
 int gs_process_start_ex(
-  const char *FileNameParentBuf, size_t LenFileNameParent,
-  const char *CmdLineBuf, size_t LenCmdLine)
+	const char *FileNameParentBuf, size_t LenFileNameParent,
+	const char *CmdLineBuf, size_t LenCmdLine)
 {
-  /* create a process and discard all the handles (process and thread handles) */
-  int r = 0;
+	/* create a process and discard all the handles (process and thread handles) */
+	int r = 0;
 
-  std::string Argv;
+	std::string Argv;
 
-  STARTUPINFO si = {};
-  PROCESS_INFORMATION pi = {};
-  HANDLE hChildProcess = NULL;
-  HANDLE hChildThread = NULL;
+	STARTUPINFO si = {};
+	PROCESS_INFORMATION pi = {};
+	HANDLE hChildProcess = NULL;
+	HANDLE hChildThread = NULL;
 
-  /* https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
-   *    32768 actually */
-  const size_t MagicCommandLineLenghtLimit = 32767;
-  const size_t ReasonableCommandLineLengthLimit = 1024;
-  char CmdLineCopyBuf[ReasonableCommandLineLengthLimit];
-  size_t LenCmdLineCopy = 0;
+	/* https://msdn.microsoft.com/en-us/library/windows/desktop/ms682425(v=vs.85).aspx
+	*    32768 actually */
+	const size_t MagicCommandLineLenghtLimit = 32767;
+	const size_t ReasonableCommandLineLengthLimit = 1024;
+	char CmdLineCopyBuf[ReasonableCommandLineLengthLimit];
+	size_t LenCmdLineCopy = 0;
 
-  BOOL Ok = 0;
-  DWORD ExitCode = 0;
+	BOOL Ok = 0;
+	DWORD ExitCode = 0;
 
-  if (!!(r = gs_buf_ensure_haszero(FileNameParentBuf, LenFileNameParent)))
-    GS_GOTO_CLEAN();
+	if (!!(r = gs_buf_ensure_haszero(FileNameParentBuf, LenFileNameParent + 1)))
+		GS_GOTO_CLEAN();
 
-  if (!!(r = gs_buf_ensure_haszero(CmdLineBuf, LenCmdLine)))
-    GS_GOTO_CLEAN();
+	if (!!(r = gs_buf_ensure_haszero(CmdLineBuf, LenCmdLine + 1)))
+		GS_GOTO_CLEAN();
 
-  Argv.append("\"", 1);
-  Argv.append(FileNameParentBuf);
-  Argv.append("\"", 1);
+	Argv.append("\"", 1);
+	Argv.append(FileNameParentBuf);
+	Argv.append("\"", 1);
 
-  for (size_t Offset = 0; Offset < LenCmdLineCopy; Offset ++) {
-    Argv.append(" ", 1);
-    Argv.append("\"", 1);
-    Argv.append(&CmdLineCopyBuf[Offset]);
-    Argv.append("\"", 1);
-    while (Offset < LenCmdLineCopy && CmdLineCopyBuf[Offset] != '\0')
-      Offset++;
-  }
+	for (size_t Offset = 0; Offset < LenCmdLine; Offset ++) {
+		Argv.append(" ", 1);
+		Argv.append("\"", 1);
+		Argv.append(&CmdLineBuf[Offset]);
+		Argv.append("\"", 1);
+		while (Offset < LenCmdLine && CmdLineBuf[Offset] != '\0')
+			Offset++;
+	}
 
-  if (!!(r = gs_buf_copy_zero_terminate(
-         Argv.data(), Argv.size(),
-	 CmdLineCopyBuf, sizeof CmdLineCopyBuf, &LenCmdLineCopy)))
-    {
-      GS_GOTO_CLEAN();
-    }
+	if (!!(r = gs_buf_copy_zero_terminate(
+		Argv.data(), Argv.size(),
+		CmdLineCopyBuf, sizeof CmdLineCopyBuf, &LenCmdLineCopy)))
+	{
+		GS_GOTO_CLEAN();
+	}
 
-  if (!!(r = gs_file_exist_ensure(FileNameParentBuf, LenFileNameParent)))
-    GS_GOTO_CLEAN();
+	if (!!(r = gs_file_exist_ensure(FileNameParentBuf, LenFileNameParent)))
+		GS_GOTO_CLEAN();
 
-  ZeroMemory(&si, sizeof si);
-  si.cb = sizeof si;
-  ZeroMemory(&pi, sizeof pi);
+	ZeroMemory(&si, sizeof si);
+	si.cb = sizeof si;
+	ZeroMemory(&pi, sizeof pi);
 
-  if (!(Ok = CreateProcess(
-      FileNameParentBuf,
-      CmdLineCopyBuf,
-      NULL,
-      NULL,
-      TRUE,
-      0, /* CREATE_NEW_CONSOLE - meh it closes on quit */
-      NULL,
-      NULL,
-      &si,
-      &pi)))
-    {
-      GS_ERR_CLEAN(1);
-    }
-  hChildProcess = pi.hProcess;
-  hChildThread = pi.hThread;
+	if (!(Ok = CreateProcess(
+		FileNameParentBuf,
+		CmdLineCopyBuf,
+		NULL,
+		NULL,
+		TRUE,
+		0, /* CREATE_NEW_CONSOLE - meh it closes on quit */
+		NULL,
+		NULL,
+		&si,
+		&pi)))
+	{
+		GS_ERR_CLEAN(1);
+	}
+	hChildProcess = pi.hProcess;
+	hChildThread = pi.hThread;
 
-  if (WAIT_OBJECT_0 != WaitForSingleObject(hChildProcess, GS_FILESYS_ARBITRARY_TIMEOUT_MSEC))
-    GS_ERR_CLEAN(1);
+	if (WAIT_OBJECT_0 != WaitForSingleObject(hChildProcess, GS_FILESYS_ARBITRARY_TIMEOUT_MSEC))
+		GS_ERR_CLEAN(1);
 
-  if (! GetExitCodeProcess(hChildProcess, &ExitCode))
-    GS_ERR_CLEAN(1);
+	if (! GetExitCodeProcess(hChildProcess, &ExitCode))
+		GS_ERR_CLEAN(1);
 
-  // FIXME: is there an official success exit code? constant zero or something?
-  if (ExitCode != EXIT_SUCCESS)
-    GS_ERR_CLEAN(1);
+	// FIXME: is there an official success exit code? constant zero or something?
+	if (ExitCode != EXIT_SUCCESS)
+		GS_ERR_CLEAN(1);
 
- clean:
-  gs_close_handle(hChildThread);
+clean:
+	gs_close_handle(hChildThread);
 
-  gs_close_handle(hChildProcess);
+	gs_close_handle(hChildProcess);
 
-  return r;
+	return r;
 }
 
 int gs_process_start(
