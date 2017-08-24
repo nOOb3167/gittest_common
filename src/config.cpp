@@ -7,6 +7,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <cstring>
+#include <climits>
 
 #include <string>
 #include <map>

@@ -21,7 +21,6 @@ int gs_file_exist(
 	size_t *oIsExist);
 int gs_file_exist_ensure(const char *FileNameBuf, size_t LenFileName);
 
-// FIXME: not implemented
 int gs_file_is_directory(const char *FileNameBuf, size_t LenFileName,
 	size_t *oIsDirectory);
 
@@ -31,6 +30,21 @@ int gs_path_append_abs_rel(
 	const char *AbsoluteBuf, size_t LenAbsolute,
 	const char *RelativeBuf, size_t LenRelative,
 	char *ioOutputPathBuf, size_t OutputPathBufSize, size_t *oLenOutputPath);
+
+int gs_file_write_frombuffer(
+	const char *FileNameBuf, size_t LenFileName,
+	uint8_t *BufferUpdateData, uint32_t BufferUpdateSize);
+
+int gs_rename_wrapper(
+	const char *SrcFileNameBuf, size_t LenSrcFileName,
+	const char *DstFileNameBuf, size_t LenDstFileName);
+
+int gs_directory_create_unless_exist(
+	const char *DirNameBuf, size_t LenDirName);
+
+int gs_process_start_ex(
+	const char *FileNameParentBuf, size_t LenFileNameParent,
+	const char *CmdLineBuf, size_t LenCmdLine);
 
 /* extra */
 

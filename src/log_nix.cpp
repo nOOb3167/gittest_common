@@ -100,7 +100,7 @@ void gs_log_nix_crash_handler_sa_sigaction_SIGNAL_HANDLER_(int signo, siginfo_t 
 	if (!!gs_log_nix_crash_handler_unhijack_signals_revert_default())
 		{ /* dummy */ }
 
-	if (!!gs_log_crash_handler_dump_global_log_list()) {
+	if (!!gs_log_crash_handler_dump_global_log_list_suffix("", strlen(""))) {
 		const char err[] = "[ERROR] inside crash handler gs_log_nix_crash_handler_sa_sigaction_SIGNAL_HANDLER_\n";
 		if (!!gs_nix_write_stdout_wrapper(err, (sizeof err) - 1))
 			{ /* dummy */ }
@@ -244,81 +244,6 @@ int gs_log_nix_crash_handler_hijack_signals() {
 clean:
 
 	return r;
-}
-
-int gs_log_crash_handler_dump_global_log_list_suffix(
-	const char *SuffixBuf, size_t LenSuffix)
-{
-	int r = 0;
-
-	size_t LenCombinedExtraSuffix = 0;
-	char CombinedExtraSuffix[512];
-
-	size_t LenCurrentFileName = 0;
-	char CurrentFileNameBuf[512];
-
-	size_t LenLogFileName = 0;
-	char LogFileNameBuf[512];
-
-	int fdLogFile = -1;
-
-	if ((LenCombinedExtraSuffix = strlen(GS_LOG_STR_EXTRA_EXTENSION) + LenSuffix)
-		>= sizeof CombinedExtraSuffix)
-		{ r = 1; goto clean; }
-
-	memcpy(CombinedExtraSuffix, GS_LOG_STR_EXTRA_SUFFIX, strlen(GS_LOG_STR_EXTRA_SUFFIX));
-	memcpy(CombinedExtraSuffix + strlen(GS_LOG_STR_EXTRA_SUFFIX), SuffixBuf, LenSuffix);
-	memset(CombinedExtraSuffix + LenCombinedExtraSuffix, '\0', 1);
-
-	if (!!(r = gs_get_current_executable_filename(CurrentFileNameBuf, sizeof CurrentFileNameBuf, &LenCurrentFileName)))
-		goto clean;
-
-	if (!!(r = gs_build_modified_filename(
-		CurrentFileNameBuf, LenCurrentFileName,
-		"", 0,
-		GS_STR_EXECUTABLE_EXPECTED_EXTENSION, strlen(GS_STR_EXECUTABLE_EXPECTED_EXTENSION),
-		CombinedExtraSuffix, LenCombinedExtraSuffix,
-		GS_LOG_STR_EXTRA_EXTENSION, strlen(GS_LOG_STR_EXTRA_EXTENSION),
-		LogFileNameBuf, sizeof LogFileNameBuf, &LenLogFileName)))
-	{
-		goto clean;
-	}
-
-	{
-		const char DumpingLogsMessage[] = "Dumping Logs\n";
-		if (!!(r = gs_nix_write_stdout_wrapper(DumpingLogsMessage, (sizeof DumpingLogsMessage) - 1)))
-			goto clean;
-	}
-
-	if (!!(r = gs_log_nix_open_dump_file(
-		LogFileNameBuf, LenLogFileName,
-		CombinedExtraSuffix, LenCombinedExtraSuffix,
-		&fdLogFile)))
-	{
-		goto clean;
-	}
-
-	{
-		GsLogCrashHandlerDumpData Data = {};
-		Data.Tripwire = GS_TRIPWIRE_LOG_CRASH_HANDLER_DUMP_DATA;
-		Data.fdLogFile = fdLogFile;
-		Data.MaxWritePos = GS_ARBITRARY_LOG_DUMP_FILE_LIMIT_BYTES;
-		Data.CurrentWritePos = 0;
-
-		if (!!(r = gs_log_list_dump_all_lowlevel(GS_LOG_LIST_GLOBAL_NAME, &Data, gs_log_nix_crash_handler_dump_cb)))
-			goto clean;
-	}
-
-
-clean:
-	gs_nix_close_wrapper_noerr(fdLogFile);
-
-	return r;
-}
-
-int gs_log_crash_handler_dump_global_log_list()
-{
-	return gs_log_crash_handler_dump_global_log_list_suffix("", strlen(""));
 }
 
 int gs_log_crash_handler_setup() {

@@ -1,9 +1,17 @@
 #include <cstddef>
+#include <cstdlib>
+#include <cstring>
+
+#include <vector>
 
 #include <signal.h>
 #include <sys/prctl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <glob.h>
 
 #include <gittest/misc.h>
 #include <gittest/filesys.h>
@@ -361,6 +369,69 @@ clean:
 	return r;
 }
 
+int gs_build_path_expand_separated(
+	const char *PathBuf, size_t LenPath,
+	const char *ExtBuf, size_t LenExt,
+	const char *SeparatorBuf, size_t LenSeparator,
+	char *ExpandedBuf, size_t ExpandedSize, size_t *oLenExpanded)
+{
+	int r = 0;
+	int errGlobMagic = GLOB_NOMATCH;
+
+	char PatternBuf[1024] = {};
+	size_t LenPattern = 0;
+
+	glob_t Glob = {};
+
+	std::string Accum;
+
+	// FIXME: better break out before running untested code
+	GS_LOG(I, S, "hit untested/rarely used function, exiting - file issue report please");
+	GS_ASSERT(0);
+
+	if (!!(r = gs_path_append_abs_rel(
+		PathBuf, LenPath,
+		ExtBuf, LenExt,
+		PatternBuf, sizeof PatternBuf, &LenPattern)))
+	{
+		GS_GOTO_CLEAN();
+	}
+
+	if (!!(r = gs_buf_ensure_haszero(PatternBuf, LenPattern + 1)))
+		GS_GOTO_CLEAN();
+
+	errGlobMagic = glob(PatternBuf, GLOB_ERR | GLOB_NOESCAPE, NULL, &Glob);
+	/* separate GLOB_NOMATCH path for compatibility
+           with the windows version of this function */
+	if (!!errGlobMagic && errGlobMagic == GLOB_NOMATCH) {
+	  Accum.append("");
+	  GS_ERR_NO_CLEAN(0);
+	}
+	if (!!errGlobMagic)
+	  GS_ERR_NO_CLEAN(1);
+
+	for (size_t i = 0; i < Glob.gl_pathc; i++) {
+	  Accum.append(Glob.gl_pathv[i]);
+	  Accum.append(SeparatorBuf, LenSeparator);
+	}
+
+	if (Accum.size() + 1 >= ExpandedSize)
+		GS_ERR_CLEAN(1);
+
+	memmove(ExpandedBuf, Accum.data(), Accum.size());
+	memset(ExpandedBuf + Accum.size(), '\0', 1);
+
+noclean:
+	if (oLenExpanded)
+		*oLenExpanded = Accum.size();
+
+clean:
+	if (!errGlobMagic)
+	  globfree(&Glob);
+
+	return r;
+}
+
 int gs_build_current_executable_relative_filename(
 	const char *RelativeBuf, size_t LenRelative,
 	char *ioCombinedBuf, size_t CombinedBufSize, size_t *oLenCombined)
@@ -490,6 +561,25 @@ clean:
 	return r;
 }
 
+int gs_file_is_directory(const char *FileNameBuf, size_t LenFileName,
+	size_t *oIsDirectory)
+{
+  int r = 0;
+
+  struct stat Stat = {};
+
+  // FIXME: ENOENT may not be an error?
+  if (!!stat (FileNameBuf, &Stat))
+    GS_ERR_CLEAN(1);
+
+  if (oIsDirectory)
+    *oIsDirectory = S_ISDIR(Stat.st_mode);
+  
+ clean:
+
+  return r;
+}
+
 int gs_path_is_absolute(const char *PathBuf, size_t LenPath, size_t *oIsAbsolute)
 {
 	int r = 0;
@@ -554,6 +644,117 @@ int gs_path_append_abs_rel(
 clean:
 
 	return r;
+}
+
+int gs_file_write_frombuffer(
+	const char *FileNameBuf, size_t LenFileName,
+	uint8_t *BufferUpdateData, uint32_t BufferUpdateSize)
+{
+	int r = 0;
+
+	int Fd = -1;
+
+	if (!!(r = gs_buf_ensure_haszero(FileNameBuf, LenFileName + 1)))
+		GS_GOTO_CLEAN();
+
+	// FIXME: choice of mask (rwx)
+	if (!!(r = gs_nix_open_mask_rwx(FileNameBuf, LenFileName, &Fd)))
+	  GS_GOTO_CLEAN();
+
+	if (!!(r = gs_nix_write_wrapper(Fd, (const char *) BufferUpdateData, BufferUpdateSize)))
+	  GS_GOTO_CLEAN();
+
+clean:
+	gs_nix_close_wrapper_noerr(Fd);
+	
+	return r;
+}
+
+int gs_rename_wrapper(
+	const char *SrcFileNameBuf, size_t LenSrcFileName,
+	const char *DstFileNameBuf, size_t LenDstFileName)
+{
+  return gs_nix_rename_wrapper(
+    SrcFileNameBuf, LenSrcFileName,
+    DstFileNameBuf, LenDstFileName);
+}
+
+int gs_directory_create_unless_exist(
+	const char *DirNameBuf, size_t LenDirName)
+{
+        /* non-reentrant (ex use of errno) */
+  
+	int r = 0;
+
+	/* 0777 aka default for linux - remember umask applies */
+	mode_t Mode = S_IRUSR | S_IWUSR | S_IXUSR |
+	  S_IRGRP | S_IWGRP | S_IXGRP |
+	  S_IROTH | S_IWOTH | S_IXOTH;
+	
+	if (!!(r = gs_buf_ensure_haszero(DirNameBuf, LenDirName + 1)))
+		GS_GOTO_CLEAN();
+
+	if (!!mkdir(DirNameBuf, Mode)) {
+	    if (errno == EEXIST)
+	      GS_ERR_NO_CLEAN(0);
+	    GS_ERR_CLEAN(1);
+	}
+
+noclean:
+
+clean:
+
+	return r;
+}
+
+int gs_process_start_ex(
+	const char *FileNameParentBuf, size_t LenFileNameParent,
+	const char *CmdLineBuf, size_t LenCmdLine)
+{
+  int r = 0;
+  
+  std::vector<const char *> Argv;
+
+  pid_t PidChild = -1;
+  
+  if (!!(r = gs_buf_ensure_haszero(FileNameParentBuf, LenFileNameParent + 1)))
+    GS_GOTO_CLEAN();
+
+  if (!!(r = gs_buf_ensure_haszero(CmdLineBuf, LenCmdLine + 1)))
+    GS_GOTO_CLEAN();
+  
+  Argv.push_back(&FileNameParentBuf[0]);
+  
+  for (size_t Offset = 0; Offset < LenCmdLine; Offset++) {
+    Argv.push_back(&CmdLineBuf[Offset]);
+    while (Offset < LenCmdLine && CmdLineBuf[Offset] != '\0')
+      Offset++;
+  }
+
+  /* argv must be terminated by NULL, see execv(2) */
+  Argv.push_back(NULL);
+
+  if ((PidChild = fork()) == -1)
+    GS_ERR_CLEAN(1);
+  if (PidChild == 0) {
+    /* consider calling _Exit (C99) on failure */
+    if (!!(r = execv(FileNameParentBuf, (char * const *) Argv.data())))
+      exit(EXIT_FAILURE);
+  }
+  else {
+    int StatusChild = 0;
+    pid_t PidWait = -1;
+    if ((PidWait = waitpid(PidChild, &StatusChild, 0)) == -1)
+      GS_ERR_CLEAN(1);
+    if (! WIFEXITED(StatusChild))
+      GS_ERR_CLEAN(1);
+    if (WEXITSTATUS(StatusChild) != EXIT_SUCCESS)
+      GS_ERR_CLEAN(1);
+  }
+
+ clean:
+
+  return r;
 }
 
 int gs_nix_write_wrapper(int fd, const char *Buf, size_t LenBuf) {
