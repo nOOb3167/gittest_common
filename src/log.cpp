@@ -92,7 +92,6 @@ static GS_THREAD_LOCAL_DESIGNATOR GsLogTls g_tls_log_global = {};
 
 static int gs_log_message_limit_level(struct GsLogBase *Base, uint32_t Level);
 static void gs_log_message_log(struct GsLogBase *Base, uint32_t Level, const char *MsgBuf, uint32_t MsgSize, const char *CppFile, int CppLine);
-static int gs_log_dump_lowlevel(struct GsLogBase *Base, void *ctx, gs_bypart_cb_t cb);
 
 int gs_log_dump_construct_header_(
 	const char *PrefixBuf, size_t PrefixSize,
@@ -162,18 +161,18 @@ int gs_log_crash_handler_dump_buf_cb(void *ctx, const char *d, int64_t l)
 {
 	GsLogCrashHandlerDumpBufData *Data = (GsLogCrashHandlerDumpBufData *)ctx;
 
-	size_t WritePos = Data->CurrentWritePos;
-
-	Data->CurrentWritePos += l;
-
 	if (Data->Tripwire != GS_TRIPWIRE_LOG_CRASH_HANDLER_DUMP_BUF_DATA)
 		return 1;
 
-	/* NOTE: return zero - if over limit, just avoid writing anything */
-	if (Data->CurrentWritePos > Data->MaxWritePos)
-		return 0;
+	if (Data->CurrentWritePos + l > Data->MaxWritePos)
+	  Data->IsOverflow = 1;
 
-	memmove(&Data->Buf[WritePos], d, l);
+	if (Data->IsOverflow)
+	  return 0;
+
+	memmove(&Data->Buf[Data->CurrentWritePos], d, l);
+
+	Data->CurrentWritePos += l;
 
 	return 0;
 }
@@ -528,7 +527,7 @@ int gs_log_crash_handler_dump_global_log_list_suffix(
 	printf("Dumping Logs To: [%.*s]\n", (int)LenLogFileName, LogFileNameBuf);
 
 	if (!(DumpBuf = (char *) malloc(GS_ARBITRARY_LOG_DUMP_FILE_LIMIT_BYTES)))
-		goto clean;
+		{ r = 1; goto clean; }
 	LenDump = GS_ARBITRARY_LOG_DUMP_FILE_LIMIT_BYTES;
 
 	{
@@ -537,13 +536,14 @@ int gs_log_crash_handler_dump_global_log_list_suffix(
 		Data.Buf = DumpBuf;
 		Data.MaxWritePos = LenDump;
 		Data.CurrentWritePos = 0;
+		Data.IsOverflow = 0;
 
 		if (!!(r = gs_log_list_dump_all_lowlevel(GS_LOG_LIST_GLOBAL_NAME, &Data, gs_log_crash_handler_dump_buf_cb)))
 			goto clean;
 
 		if (!!(r = gs_file_write_frombuffer(
 			LogFileNameBuf, LenLogFileName,
-			(uint8_t *) Data.Buf, GS_MIN(Data.CurrentWritePos, LenDump))))
+			(uint8_t *) Data.Buf, Data.CurrentWritePos)))
 		{
 			goto clean;
 		}
@@ -565,6 +565,27 @@ int gs_log_crash_handler_dump_global_log_list_suffix_2(
 		ThreadName.append(SuffixBuf2);
 
 	return gs_log_crash_handler_dump_global_log_list_suffix(ThreadName.c_str(), ThreadName.size());
+}
+
+int gs_log_crash_handler_printf_cb(void *ctx, const char *d, int64_t l)
+{
+	GsLogCrashHandlerPrintfData *Data = (GsLogCrashHandlerPrintfData *) ctx;
+
+	if (Data->Tripwire != GS_TRIPWIRE_LOG_CRASH_HANDLER_PRINTF_DATA)
+		return 1;
+
+	printf("%.*s", (int)l, d);
+
+	return 0;
+}
+
+void gs_log_crash_handler_printall()
+{
+	GsLogCrashHandlerPrintfData Data = {};
+	Data.Tripwire = GS_TRIPWIRE_LOG_CRASH_HANDLER_PRINTF_DATA;
+
+	if (gs_log_list_dump_all_lowlevel(GS_LOG_LIST_GLOBAL_NAME, &Data, gs_log_crash_handler_printf_cb))
+	{ /* dummy */ }
 }
 
 void gs_log_tls_SZ(const char *CppFile, int CppLine, uint32_t Level, const char *MsgBuf, uint32_t MsgSize)
