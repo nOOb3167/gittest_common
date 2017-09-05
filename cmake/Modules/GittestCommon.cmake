@@ -2,6 +2,23 @@ OPTION(GITTEST_COMMON_CONFIG_GENERATION_DISABLE "Use an empty default config ins
 SET(GITTEST_COMMON_CONFIG_GENERATION_FILEPATH "SETME" CACHE FILEPATH "(Path to) Config file used for generating")
 SET(GITTEST_COMMON_PREFIX "SETME" CACHE PATH "Will be strategically prefixed to used paths")
 
+FUNCTION (GITTEST_COMMON_GENERATE INPUT_DIR INPUT_NAME_BASE INPUT_NAME_EXT)
+  # only callable after GITTEST_COMMON_SET_GENERATION
+  IF (NOT (TARGET GsCommonConfigHeaderGen))
+    MESSAGE(FATAL_ERROR "Attempted generating without generator")
+  ENDIF ()
+
+  ADD_CUSTOM_COMMAND(
+    OUTPUT "${INPUT_NAME_BASE}.h"
+    DEPENDS GsCommonConfigHeaderGen
+            "${INPUT_DIR}/${INPUT_NAME_BASE}${INPUT_NAME_EXT}"
+    COMMAND GsCommonConfigHeaderGen
+      --identifier "${INPUT_NAME_BASE}"
+      "${INPUT_DIR}/${INPUT_NAME_BASE}${INPUT_NAME_EXT}"
+      "${CMAKE_BINARY_DIR}/${INPUT_NAME_BASE}.h"
+    COMMENT "Generating [${INPUT_NAME_BASE}]"
+  )
+ENDFUNCTION ()
 
 FUNCTION (GITTEST_COMMON_SET_GENERATION)
   # define a config header generator executable target (GsCommonConfigHeaderGen).
@@ -30,6 +47,7 @@ FUNCTION (GITTEST_COMMON_SET_GENERATION)
       DEPENDS GsCommonConfigHeaderGen
               "${GITTEST_COMMON_CONFIG_GENERATION_FILEPATH}"
       COMMAND GsCommonConfigHeaderGen
+        --identifier "GS_CONFIG_BUILTIN_HEXSTRING"
         "${GITTEST_COMMON_CONFIG_GENERATION_FILEPATH}"
         "${CMAKE_BINARY_DIR}/GsConfigHeader.h"
       COMMENT "Generating Config"
