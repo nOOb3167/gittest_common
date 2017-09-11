@@ -31,6 +31,8 @@ struct GsAuxConfigCommonVars {
 	char *SelfUpdateBlobNameBuf; size_t LenSelfUpdateBlobName;
 };
 
+int gs_config_decode_hex_c(const char *HexBuf, size_t LenHex, void *Ctx, gs_bypart_cb_t Cb);
+
 int gs_conf_map_create(struct GsConfMap **oConfMap);
 int gs_conf_map_destroy(struct GsConfMap *ConfMap);
 

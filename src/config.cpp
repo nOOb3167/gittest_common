@@ -362,6 +362,24 @@ int gs_config_key_ex_interpret_subst(
 	return 0;
 }
 
+int gs_config_decode_hex_c(const char *HexBuf, size_t LenHex, void *Ctx, gs_bypart_cb_t Cb)
+{
+	int r = 0;
+
+	std::string BufferHex(HexBuf, LenHex);
+	std::string DecodedHex;
+
+	if (!!(r = gs_config_decode_hex(BufferHex, &DecodedHex)))
+		GS_GOTO_CLEAN();
+
+	if (!!(r = Cb(Ctx, DecodedHex.data(), DecodedHex.size())))
+		GS_GOTO_CLEAN();
+
+clean:
+
+	return r;
+}
+
 int gs_conf_map_create(struct GsConfMap **oConfMap)
 {
 	*oConfMap = new GsConfMap();
