@@ -87,7 +87,7 @@ struct GsConfMap
 int gs_config_pattern_subst(const std::string &RawVal, std::string *oResultVal);
 
 size_t gs_config_decode_hex_char_(const char *pHexChar, size_t *oIsError);
-int gs_config_decode_hex(const std::string &BufferSwapped, std::string *oDecoded);
+int gs_config_decode_hex(const std::string &Buffer, std::string *oDecoded);
 int gs_config_decode_hex_pairwise_swapped(const std::string &BufferSwapped, std::string *oDecoded);
 
 int gs_config_key_ex(const GsConfMap *KeyVal, const char *Key, std::string *oVal);
@@ -180,13 +180,11 @@ size_t gs_config_decode_hex_char_(const char *pHexChar, size_t *oIsError)
 	return 0;
 }
 
-int gs_config_decode_hex(const std::string &BufferSwapped, std::string *oDecoded)
+int gs_config_decode_hex(const std::string &Buffer, std::string *oDecoded)
 {
 	int r = 0;
 
-	std::string Decoded(BufferSwapped.size() / 2, '\0');
-
-	std::string Buffer(BufferSwapped);
+	std::string Decoded(Buffer.size() / 2, '\0');
 
 	size_t IsError = 0;
 
