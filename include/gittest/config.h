@@ -4,6 +4,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include <gittest/bypart.h>
+
 #define GS_CONFIG_DEFAULT_RELATIVE_PATHNAME "."
 #define GS_CONFIG_DEFAULT_RELATIVE_FILENAME "GsConfig.conf"
 
