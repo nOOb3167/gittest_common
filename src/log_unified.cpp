@@ -2,6 +2,7 @@
 #include <cstdio>
 
 #include <sstream>
+#include <iomanip>
 
 #include <gittest/misc.h>
 
@@ -35,8 +36,18 @@ int gs_log_unified_message_log(
 	int CppLine)
 {
 	std::stringstream ss;
-	ss  << "[" + std::string(Prefix) + "] "
-		<< "[" + std::string(MsgBuf, MsgSize) << "]"
+
+	if (strcmp(MsgBuf, "CLEAN") == 0) {
+		std::string CF(CppFile);
+		const size_t FS = CF.find_last_of('/');
+		const size_t BS = CF.find_last_of('\\');
+		const size_t From = FS != std::string::npos ? FS+1 : (BS != std::string::npos ? BS+1 : 0);
+		CF = CF.substr(From);
+		ss << "[" << std::setw(30) << CF << ":" << std::setw(5) << CppLine << "] ";
+	}
+
+	ss  << "[" << std::string(Prefix) << "] "
+		<< "[" << std::string(MsgBuf, MsgSize) << "]"
 		<< std::endl;
 
 	/* write to stdout as debug aid */
