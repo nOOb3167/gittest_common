@@ -757,6 +757,46 @@ int gs_process_start_ex(
   return r;
 }
 
+int gs_posixstyle_open_read(const char *Filename)
+{
+	int r = -1;
+
+	while (-1 == (r = open(FileNameBuf, O_RDONLY | O_CLOEXEC)) && errno == EINTR)
+		{}
+
+	return r;
+}
+
+int gs_posixstyle_fstat(int Fd, struct gs_stat *ioStat)
+{
+	int r = -1;
+
+	struct _stat Stat = {};
+
+	while (-1 == (r = fstat(Fd, &Stat)) && errno == EINTR)
+		{}
+
+	if (-1 == r)
+		goto clean;
+
+	ioStat->mStMode_IfReg = (Stat.st_mode & S_IFMT) == S_IFREG;
+	ioStat->mStSize = Stat.st_size;
+
+clean:
+
+	return r;
+}
+
+int gs_posixstyle_close(int Fd)
+{
+	int r = -1;
+
+	while (-1 == (r = close(Fd)) && errno == EINTR)
+		{}
+
+	return r;
+}
+
 int gs_nix_write_wrapper(int fd, const char *Buf, size_t LenBuf) {
 	/* non-reentrant (ex use of errno)
 	*  http://stackoverflow.com/questions/1694164/is-errno-thread-safe/1694170#1694170

@@ -48,10 +48,8 @@ int gs_process_start_ex(
   const char *FileNameParentBuf, size_t LenFileNameParent,
   const char *CmdLineBuf, size_t LenCmdLine);
 
-/* unportable / platform specific */
-
-int gs_process_start(
-	const char *FileNameParentBuf, size_t LenFileNameParent,
-	const char *CmdLineBuf, size_t LenCmdLine);
+int gs_posixstyle_open_read(const char *Filename);
+int gs_posixstyle_fstat(int Fd, struct gs_stat *ioStat);
+int gs_posixstyle_close(int Fd);
 
 #endif /* _GITTEST_FILESYS_WIN_H_ */

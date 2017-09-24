@@ -2,6 +2,7 @@
 #define _GITTEST_FILESYS_NIX_H_
 
 #include <stddef.h>
+#include <stdint.h>
 
 int gs_build_path_expand_separated(
 	const char *PathBuf, size_t LenPath,
@@ -45,6 +46,10 @@ int gs_directory_create_unless_exist(
 int gs_process_start_ex(
 	const char *FileNameParentBuf, size_t LenFileNameParent,
 	const char *CmdLineBuf, size_t LenCmdLine);
+
+int gs_posixstyle_open_read(const char *Filename);
+int gs_posixstyle_fstat(int Fd, struct gs_stat *ioStat);
+int gs_posixstyle_close(int Fd);
 
 /* extra */
 

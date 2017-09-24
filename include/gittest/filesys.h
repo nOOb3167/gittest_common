@@ -3,6 +3,12 @@
 
 #include <stddef.h>
 
+struct gs_stat
+{
+	int mStMode_IfReg;
+	int mStSize;
+};
+
 int gs_build_modified_filename(
 	const char *BaseFileNameBuf, size_t LenBaseFileName,
 	const char *ExpectedSuffixBuf, size_t LenExpectedSuffix,
