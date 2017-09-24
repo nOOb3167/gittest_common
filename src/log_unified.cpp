@@ -1,5 +1,6 @@
-#include <stdint.h>
+#include <cstdint>
 #include <cstdio>
+#include <cstring>
 
 #include <sstream>
 #include <iomanip>

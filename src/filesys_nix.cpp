@@ -757,11 +757,11 @@ int gs_process_start_ex(
   return r;
 }
 
-int gs_posixstyle_open_read(const char *Filename)
+int gs_posixstyle_open_read(const char *FileName)
 {
 	int r = -1;
 
-	while (-1 == (r = open(FileNameBuf, O_RDONLY | O_CLOEXEC)) && errno == EINTR)
+	while (-1 == (r = open(FileName, O_RDONLY | O_CLOEXEC)) && errno == EINTR)
 		{}
 
 	return r;
@@ -771,7 +771,7 @@ int gs_posixstyle_fstat(int Fd, struct gs_stat *ioStat)
 {
 	int r = -1;
 
-	struct _stat Stat = {};
+	struct stat Stat = {};
 
 	while (-1 == (r = fstat(Fd, &Stat)) && errno == EINTR)
 		{}
