@@ -105,11 +105,11 @@
 
 #define GS_DBG_LOG() GS_LOG(CLEAN, S, "CLEAN");
 
-#define GS_ERR_NO_CLEAN(THE_R) do { r = (THE_R); GS_DBG_LOG(); goto noclean; } while(0)
-#define GS_ERR_CLEAN(THE_R) do { r = (THE_R); GS_DBG_LOG(); GS_DBG_CLEAN(); goto clean; } while(0)
-#define GS_GOTO_CLEAN() do { GS_DBG_LOG(); GS_DBG_CLEAN(); goto clean; } while(0)
-#define GS_ERR_CLEANSUB(THE_R) do { r = (THE_R); GS_DBG_LOG(); GS_DBG_CLEAN(); goto cleansub; } while(0)
-#define GS_GOTO_CLEANSUB() do { GS_DBG_LOG(); GS_DBG_CLEAN(); goto cleansub; } while(0)
+#define GS_ERR_NO_CLEAN(THE_R) do { r = (THE_R); goto noclean; } while(0)
+#define GS_ERR_CLEAN(THE_R)    do { r = (THE_R); GS_DBG_LOG(); goto clean; } while(0)
+#define GS_GOTO_CLEAN()        do { GS_DBG_LOG(); goto clean; } while(0)
+#define GS_ERR_CLEANSUB(THE_R) do { r = (THE_R); GS_DBG_LOG(); goto cleansub; } while(0)
+#define GS_GOTO_CLEANSUB()     do { GS_DBG_LOG(); goto cleansub; } while(0)
 
 #define GS_ERR_NO_CLEAN_L(THE_R, LEVEL, TT, ...) do { GS_LOG(LEVEL, TT, __VA_ARGS__); GS_ERR_NO_CLEAN(THE_R); } while(0)
 #define GS_ERR_CLEAN_L(THE_R, LEVEL, TT, ...) do { GS_LOG(LEVEL, TT, __VA_ARGS__); GS_ERR_CLEAN(THE_R); } while(0)
