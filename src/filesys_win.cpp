@@ -375,6 +375,42 @@ clean:
 	return r;
 }
 
+int gs_file_read_tobuffer_block(
+	const char *FileNameBuf, size_t LenFileName,
+	char *ioDataBuf, size_t DataSize, size_t *oLenData)
+{
+	int r = 0;
+
+	int Fd = -1;
+	int cnt = -1;
+	size_t Offset = 0;
+
+	if (!!(r = gs_buf_ensure_haszero(FileNameBuf, LenFileName + 1)))
+		GS_GOTO_CLEAN();
+
+	Fd = _open(FileNameBuf, _O_RDONLY | _O_BINARY);
+	if (Fd == -1 && errno == ENOENT)
+		GS_ERR_NO_CLEAN(GS_ERRCODE_NOTFOUND);
+	if (Fd == -1)
+		GS_GOTO_CLEAN();
+
+	while ((cnt = _read(Fd, ioDataBuf + Offset, DataSize - Offset)) > 0 && Offset <= DataSize)
+		Offset += cnt;
+
+	if (cnt != 0)
+		GS_ERR_CLEAN(1);
+
+noclean:
+	if (oLenData)
+		*oLenData = Offset;
+
+clean:
+	if (Fd != -1)
+		_close(Fd);
+
+	return r;
+}
+
 int gs_file_write_frombuffer(
 	const char *FileNameBuf, size_t LenFileName,
 	uint8_t *BufferUpdateData, uint32_t BufferUpdateSize)

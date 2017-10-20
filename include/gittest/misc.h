@@ -110,6 +110,8 @@
 #define GS_GOTO_CLEAN()        do { GS_DBG_LOG(); goto clean; } while(0)
 #define GS_ERR_CLEANSUB(THE_R) do { r = (THE_R); GS_DBG_LOG(); goto cleansub; } while(0)
 #define GS_GOTO_CLEANSUB()     do { GS_DBG_LOG(); goto cleansub; } while(0)
+#define GS_ERR_CLEAN_J(JUMPLABEL, THE_R) do { r = (THE_R); GS_DBG_LOG(); goto clean_ ## JUMPLABEL; } while(0)
+#define GS_GOTO_CLEAN_J(JUMPLABEL)       do { GS_DBG_LOG(); goto clean_ ## JUMPLABEL; } while(0)
 
 #define GS_ERR_NO_CLEAN_L(THE_R, LEVEL, TT, ...) do { GS_LOG(LEVEL, TT, __VA_ARGS__); GS_ERR_NO_CLEAN(THE_R); } while(0)
 #define GS_ERR_CLEAN_L(THE_R, LEVEL, TT, ...) do { GS_LOG(LEVEL, TT, __VA_ARGS__); GS_ERR_CLEAN(THE_R); } while(0)
@@ -119,6 +121,7 @@
 #define GS_ERRCODE_RECONNECT 0x7BDD6EAF
 #define GS_ERRCODE_EXIT      0x7BDD6EB0
 #define GS_ERRCODE_TIMEOUT   0x7BDD6EB1
+#define GS_ERRCODE_NOTFOUND  0x2DF18E74
 
 #define GS_AUX_MARKER_STRUCT_IS_COPYABLE /* dummy (marker / documentation purpose) */
 

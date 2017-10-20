@@ -32,6 +32,9 @@ int gs_path_append_abs_rel(
 	const char *RelativeBuf, size_t LenRelative,
 	char *ioOutputPathBuf, size_t OutputPathBufSize, size_t *oLenOutputPath);
 
+int gs_file_read_tobuffer_block(
+	const char *FileNameBuf, size_t LenFileName,
+	char *ioDataBuf, size_t DataSize, size_t *oLenData);
 int gs_file_write_frombuffer(
 	const char *FileNameBuf, size_t LenFileName,
 	uint8_t *BufferUpdateData, uint32_t BufferUpdateSize);
