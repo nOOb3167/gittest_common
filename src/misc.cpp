@@ -115,3 +115,21 @@ void gs_current_thread_name_set_cstr_2(
 
 	gs_current_thread_name_set_cstr(ThreadName.c_str());
 }
+
+void * gs_realloc(void *ptr, size_t size)
+{
+	void *ret = NULL;
+	if (size == 0) {
+		free(ptr);
+		goto clean;
+	}
+	else {
+		ret = realloc(ptr, size);
+		if (!ret) {
+			free(ptr);
+			goto clean;
+		}
+	}
+clean:
+	return ret;
+}

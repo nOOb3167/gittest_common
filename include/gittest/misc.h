@@ -162,6 +162,8 @@ void gs_current_thread_name_set_cstr_2(
 	const char *BaseNameCStr,
 	const char *optExtraNameCStr);
 
+void * gs_realloc(void *ptr, size_t size);
+
 /* to be implemented per platform */
 
 void gs_current_thread_name_set(
