@@ -676,6 +676,8 @@ int gs_file_read_tobuffer_block(
 				GS_ERR_CLEAN(1);
 		}
 		Offset += cnt;
+		if (cnt == 0)
+			break;
 	}
 
 	if (cnt != 0)
