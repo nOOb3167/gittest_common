@@ -61,6 +61,8 @@ struct GsLogList {
 	struct GsLogListNode *mLogs;
 
 	struct GsLogUnified *mLogUnifiedOpt;  /**< owned */
+	gs_log_list_func_dump_extra_lowlevel_t mFuncLogDumpExtraLowLevel;
+	struct GsCrashHandlerDumpExtra *mDumpExtraCtx; /**< notowned */
 };
 
 struct GsLogTls {
@@ -71,6 +73,7 @@ typedef int(*gs_log_base_func_message_limit_level_t)(GsLogBase *XKlass, uint32_t
 typedef void(*gs_log_base_func_message_log_t)(GsLogBase *XKlass, uint32_t Level, const char *MsgBuf, uint32_t MsgSize, const char *CppFile, int CppLine);
 /* lowlevel : intended for use within crash handler - dump without synchronization or memory allocation etc */
 typedef int(*gs_log_base_func_dump_lowlevel_t)(GsLogBase *XKlass, void *ctx, gs_bypart_cb_t cb);
+typedef int(*gs_log_base_func_size_lowlevel_t)(GsLogBase *XKlass, size_t *oSize);
 
 struct GsLogBase {
 	struct GsVersion mVersion;
@@ -86,6 +89,7 @@ struct GsLogBase {
 	gs_log_base_func_message_limit_level_t mFuncMessageLimitLevel;
 	gs_log_base_func_message_log_t mFuncMessageLog;
 	gs_log_base_func_dump_lowlevel_t mFuncDumpLowLevel;
+	gs_log_base_func_size_lowlevel_t mFuncSizeLowLevel;
 };
 
 static GS_THREAD_LOCAL_DESIGNATOR GsLogTls g_tls_log_global = {};
@@ -128,6 +132,12 @@ int gs_log_dump_lowlevel(struct GsLogBase *Base, void *ctx, gs_bypart_cb_t cb)
 clean:
 
 	return r;
+}
+
+int gs_log_size_lowlevel(struct GsLogBase *Base, size_t *oSize)
+{
+	*oSize = cbuf_len(&Base->mMsg);
+	return 0;
 }
 
 int gs_log_dump_construct_header_(
@@ -237,6 +247,7 @@ int gs_log_base_create(
 	Base->mFuncMessageLimitLevel = gs_log_message_limit_level;
 	Base->mFuncMessageLog = gs_log_message_log;
 	Base->mFuncDumpLowLevel = gs_log_dump_lowlevel;
+	Base->mFuncSizeLowLevel = gs_log_size_lowlevel;
 
 	if (oBase)
 		*oBase = Base;
@@ -301,20 +312,21 @@ int gs_log_list_create(struct GsLogList **oLogList)
 
 	gs_log_version_make_compiled(&LogList->mVersion);
 
-	LogList->mMutexData; /* dummy */
-	LogList->mLogs = NULL; /* empty list node */
-	LogList->mLogUnifiedOpt = NULL;
-
 	if (!!(r = gs_log_unified_create(&LogUnified)))
 		goto clean;
 
-	if (!!(r = gs_log_list_set_log_unified(LogList, LogUnified)))
-		goto clean;
+	LogList->mMutexData; /* dummy */
+	LogList->mLogs = NULL; /* empty list node */
+	LogList->mLogUnifiedOpt = GS_ARGOWN(&LogUnified);
+	LogList->mFuncLogDumpExtraLowLevel = NULL;
+	LogList->mDumpExtraCtx = NULL;
 
 	if (oLogList)
-		*oLogList = LogList;
+		*oLogList = GS_ARGOWN(&LogList);
 
 clean:
+	GS_DELETE_F(&LogUnified, gs_log_unified_destroy);
+	GS_DELETE(&LogList, GsLogList);
 
 	return r;
 }
@@ -355,6 +367,34 @@ int gs_log_list_set_log_unified(struct GsLogList *LogList, struct GsLogUnified *
 clean:
 
 	return r;
+}
+
+int gs_log_list_set_func_dump_extra(struct GsLogList *LogList, gs_log_list_func_dump_extra_lowlevel_t FuncDumpExtra, struct GsCrashHandlerDumpExtra *CtxBase)
+{
+	int r = 0;
+
+	{
+		std::lock_guard<std::mutex> lock(LogList->mMutexData);
+
+		if (LogList->mFuncLogDumpExtraLowLevel)
+			{ r = 1; goto clean; }
+
+		LogList->mFuncLogDumpExtraLowLevel = FuncDumpExtra;
+		LogList->mDumpExtraCtx = CtxBase;
+	}
+
+clean:
+
+	return r;
+}
+
+int gs_log_list_call_func_dump_extra_global_lowlevel()
+{
+	struct GsLogList *LogList = GS_LOG_LIST_GLOBAL_NAME;
+	if (LogList && LogList->mFuncLogDumpExtraLowLevel)
+		if (!!LogList->mFuncLogDumpExtraLowLevel(LogList, LogList->mDumpExtraCtx))
+			return 1;
+	return 0;
 }
 
 /** add GsLog to GsLogList and bind GsLogUnified */
@@ -454,6 +494,30 @@ int gs_log_list_dump_all_lowlevel(GsLogList *LogList, void *ctx, gs_bypart_cb_t 
 		if (!!(r = Node->mLog->mFuncDumpLowLevel(Node->mLog, ctx, cb)))
 			goto clean;
 	}
+
+clean:
+
+	return r;
+}
+
+int gs_log_list_size_all_lowlevel(GsLogList *LogList, size_t *oSizeCurrent)
+{
+	int r = 0;
+
+	size_t Size = 0;
+
+	if (!!(r = gs_log_version_check_compiled(&LogList->mVersion)))
+		goto clean;
+
+	for (struct GsLogListNode *Node = LogList->mLogs; Node != NULL; Node = Node->mNext) {
+		size_t Tmp = 0;
+		if (!!(r = Node->mLog->mFuncSizeLowLevel(Node->mLog, &Tmp)))
+			goto clean;
+		Size += Tmp;
+	}
+
+	if (oSizeCurrent)
+		*oSizeCurrent = Size;
 
 clean:
 

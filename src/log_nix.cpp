@@ -101,10 +101,16 @@ void gs_log_nix_crash_handler_sa_sigaction_SIGNAL_HANDLER_(int signo, siginfo_t 
 		{ /* dummy */ }
 
 	if (!!gs_log_crash_handler_dump_global_log_list_suffix("", strlen(""))) {
-		const char err[] = "[ERROR] inside crash handler gs_log_nix_crash_handler_sa_sigaction_SIGNAL_HANDLER_\n";
+		const char err[] = "[ERROR] 0 inside crash handler gs_log_nix_crash_handler_sa_sigaction_SIGNAL_HANDLER_\n";
 		if (!!gs_nix_write_stdout_wrapper(err, (sizeof err) - 1))
 			{ /* dummy */ }
 	}
+
+    if (!!gs_log_list_call_func_dump_extra_global_lowlevel()) {
+		const char err[] = "[ERROR] 1 inside crash handler gs_log_nix_crash_handler_sa_sigaction_SIGNAL_HANDLER_\n";
+		if (!!gs_nix_write_stdout_wrapper(err, (sizeof err) - 1))
+			{ /* dummy */ }
+    }
 
 	/* signal action should already be SIG_DFL when calling this.
 	*  but accidental recursion here would be pretty bad, so make doubly sure. */

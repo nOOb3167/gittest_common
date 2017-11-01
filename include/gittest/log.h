@@ -16,6 +16,7 @@
 #define GS_TRIPWIRE_LOG_CRASH_HANDLER_PRINTF_DATA 0x429d8400
 
 #define GS_ARBITRARY_LOG_DUMP_FILE_LIMIT_BYTES 10 * 1024 * 1024 /* 10MB */
+#define GS_LOG_DUMP_EXTRA_ARBITRARY_TIMEOUT_MSEC (5 * 1000)
 
 
 /* global log list: user should define, signature 'GsLogList *', initialized eg by 'gs_log_list_global_create' */
@@ -28,6 +29,12 @@ struct GsLogList;
 struct GsLogTls;
 
 struct GsLogUnified;
+
+struct GsCrashHandlerDumpExtra
+{
+};
+
+typedef int(*gs_log_list_func_dump_extra_lowlevel_t)(struct GsLogList *LogList, struct GsCrashHandlerDumpExtra *CtxBase);
 
 struct GsLogCrashHandlerDumpBufData { uint32_t Tripwire; char *Buf; size_t MaxWritePos; size_t CurrentWritePos; size_t IsOverflow; };
 int gs_log_crash_handler_dump_buf_cb(void *ctx, const char *d, int64_t l);
@@ -54,9 +61,12 @@ struct GsLogList * gs_log_list_global_create();
 int gs_log_list_create(struct GsLogList **oLogList);
 int gs_log_list_free(struct GsLogList *LogList);
 int gs_log_list_set_log_unified(struct GsLogList *LogList, struct GsLogUnified *LogUnified);
+int gs_log_list_set_func_dump_extra(struct GsLogList *LogList, gs_log_list_func_dump_extra_lowlevel_t FuncDumpExtra, struct GsCrashHandlerDumpExtra *CtxBase);
+int gs_log_list_call_func_dump_extra_global_lowlevel();
 int gs_log_list_add_log(struct GsLogList *LogList, struct GsLogBase *Log);
 int gs_log_list_get_log(struct GsLogList *LogList, const char *Prefix, struct GsLogBase **oLog);
 int gs_log_list_dump_all_lowlevel(GsLogList *LogList, void *ctx, gs_bypart_cb_t cb);
+int gs_log_list_size_all_lowlevel(GsLogList *LogList, size_t *oSizeCurrent);
 struct GsLogBase * gs_log_list_get_log_ret(struct GsLogList *LogList, const char *Prefix);
 struct GsLogBase * gs_log_list_get_log_ret_2(struct GsLogList *LogList, const char *Prefix1, const char *optPrefix2);
 
@@ -70,6 +80,7 @@ void gs_log_crash_handler_printall();
 
 // FIXME: originally static in log.cpp
 int gs_log_dump_lowlevel(struct GsLogBase *Base, void *ctx, gs_bypart_cb_t cb);
+int gs_log_size_lowlevel(struct GsLogBase *Base, size_t *oSize);
 
 /* defined per-platform */
 int gs_log_crash_handler_setup();

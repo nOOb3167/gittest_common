@@ -21,7 +21,10 @@ LONG WINAPI gs_log_crash_handler_unhandled_exception_filter_(struct _EXCEPTION_P
 	//DebugBreak();
 	/* not much to do about errors here presumably */
 	if (!!gs_log_crash_handler_dump_global_log_list_suffix("", strlen("")))
-		printf("[ERROR] inside crash handler gs_log_crash_handler_unhandled_exception_filter_\n");
+		printf("[ERROR] 0 inside crash handler gs_log_crash_handler_unhandled_exception_filter_\n");
+
+	if (!!gs_log_list_call_func_dump_extra_global_lowlevel())
+		printf("[ERROR] 1 inside crash handler gs_log_crash_handler_unhandled_exception_filter_\n");
 
 	return EXCEPTION_CONTINUE_SEARCH;
 }
