@@ -671,11 +671,6 @@ void gs_log_tls_lineprefix(const char *CppFile, int CppLine, uint32_t Level, con
 {
 	if (g_tls_log_global.mpCurrentLog && !!gs_log_message_limit_level(g_tls_log_global.mpCurrentLog, Level))
 		return;
-	if (g_tls_log_global.mpCurrentLog && g_tls_log_global.mpCurrentLog->mLogUnifiedOpt)
-		gs_log_unified_message_log(
-		g_tls_log_global.mpCurrentLog->mLogUnifiedOpt,
-		g_tls_log_global.mpCurrentLog->mPrefixBuf,
-		Level, MsgBuf, MsgSize, CppFile, CppLine);
 	if (g_tls_log_global.mpCurrentLog) {
 		const char lineprefix[] = ":::: ";
 		std::stringstream ss;
@@ -686,7 +681,14 @@ void gs_log_tls_lineprefix(const char *CppFile, int CppLine, uint32_t Level, con
 			ss << lineprefix << std::string(Old, New) << std::endl;
 		}
 		ssstr = ss.str();
-		g_tls_log_global.mpCurrentLog->mFuncMessageLog(g_tls_log_global.mpCurrentLog, Level, ssstr.c_str(), ssstr.size(), CppFile, CppLine);
+
+		if (g_tls_log_global.mpCurrentLog && g_tls_log_global.mpCurrentLog->mLogUnifiedOpt)
+			gs_log_unified_message_log(
+				g_tls_log_global.mpCurrentLog->mLogUnifiedOpt,
+				g_tls_log_global.mpCurrentLog->mPrefixBuf,
+				Level, ssstr.c_str(), ssstr.size(), CppFile, CppLine);
+		if (g_tls_log_global.mpCurrentLog)
+			g_tls_log_global.mpCurrentLog->mFuncMessageLog(g_tls_log_global.mpCurrentLog, Level, ssstr.c_str(), ssstr.size(), CppFile, CppLine);
 	}
 }
 
