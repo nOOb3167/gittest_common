@@ -474,6 +474,8 @@ int gs_log_list_dump_all_lowlevel(GsLogList *LogList, void *ctx, gs_bypart_cb_t 
 {
 	int r = 0;
 
+	/* code sync with gs_log_list_size_all_lowlevel */
+
 	if (!!(r = gs_log_version_check_compiled(&LogList->mVersion)))
 		goto clean;
 
@@ -504,6 +506,8 @@ int gs_log_list_size_all_lowlevel(GsLogList *LogList, size_t *oSizeCurrent)
 {
 	int r = 0;
 
+	/* code sync with gs_log_list_dump_all_lowlevel */
+
 	size_t Size = 0;
 
 	if (!!(r = gs_log_version_check_compiled(&LogList->mVersion)))
@@ -511,6 +515,17 @@ int gs_log_list_size_all_lowlevel(GsLogList *LogList, size_t *oSizeCurrent)
 
 	for (struct GsLogListNode *Node = LogList->mLogs; Node != NULL; Node = Node->mNext) {
 		size_t Tmp = 0;
+		size_t LenHeader = 0;
+		char Header[256] = {};
+
+		if (!!(r = gs_log_dump_construct_header_(
+			Node->mLog->mPrefixBuf, Node->mLog->mLenPrefix,
+			Header, sizeof Header, &LenHeader)))
+		{
+			goto clean;
+		}
+		Size += LenHeader;
+
 		if (!!(r = Node->mLog->mFuncSizeLowLevel(Node->mLog, &Tmp)))
 			goto clean;
 		Size += Tmp;
