@@ -13,10 +13,12 @@
 
 #define GS_LOG(LEVEL, TT, ...) do { GS_LOG_TT_ ## TT (__FILE__, __LINE__, GS_LOG_LEVEL_ ## LEVEL, __VA_ARGS__); } while(0)
 
+#define GS_LOG_TT_LINEPREFIX gs_log_tls_lineprefix
 #define GS_LOG_TT_SZ gs_log_tls_SZ
 #define GS_LOG_TT_S  gs_log_tls_S
 #define GS_LOG_TT_PF  gs_log_tls_PF
 
+void gs_log_tls_lineprefix(const char *CppFile, int CppLine, uint32_t Level, const char *MsgBuf, uint32_t MsgSize);
 void gs_log_tls_SZ(const char *CppFile, int CppLine, uint32_t Level, const char *MsgBuf, uint32_t MsgSize);
 void gs_log_tls_S(const char *CppFile, int CppLine, uint32_t Level, const char *MsgBuf);
 void gs_log_tls_PF(const char *CppFile, int CppLine, uint32_t Level, const char *Format, ...);
