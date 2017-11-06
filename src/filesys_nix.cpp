@@ -839,7 +839,7 @@ int gs_posixstyle_close(int Fd)
 {
 	int r = -1;
 
-	while (-1 == (r = close(Fd)) && errno == EINTR)
+	if (-1 == (r = close(Fd)))
 		{}
 
 	return r;
