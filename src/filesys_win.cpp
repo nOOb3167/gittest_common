@@ -613,3 +613,9 @@ int gs_posixstyle_close(int Fd)
 {
 	return _close(Fd);
 }
+
+void gs_close_cond(int Fd)
+{
+	if (Fd != -1)
+		_close(Fd);
+}

@@ -845,6 +845,12 @@ int gs_posixstyle_close(int Fd)
 	return r;
 }
 
+void gs_close_cond(int Fd)
+{
+	if (Fd != -1)
+		close(Fd);
+}
+
 int gs_nix_write_wrapper(int fd, const char *Buf, size_t LenBuf) {
 	/* non-reentrant (ex use of errno)
 	*  http://stackoverflow.com/questions/1694164/is-errno-thread-safe/1694170#1694170
