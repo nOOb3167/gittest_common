@@ -12,6 +12,13 @@ void * gs_aux_argown(void **ptr)
 	return ret;
 }
 
+int gs_aux_fdown(int *fd)
+{
+	int ret = *fd;
+	*fd = -1;
+	return ret;
+}
+
 int gs_buf_copy_zero_terminate(
 	const char *SrcBuf, size_t LenSrc,
 	char *ioDstBuf, size_t DstBufSize, size_t *oLenDst)
