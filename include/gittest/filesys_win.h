@@ -54,6 +54,6 @@ int gs_process_start_ex(
 int gs_posixstyle_open_read(const char *Filename);
 int gs_posixstyle_fstat(int Fd, struct gs_stat *ioStat);
 int gs_posixstyle_close(int Fd);
-void gs_close_cond(int Fd);
+void gs_close_cond(int *Fd);
 
 #endif /* _GITTEST_FILESYS_WIN_H_ */

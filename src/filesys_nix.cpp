@@ -845,10 +845,12 @@ int gs_posixstyle_close(int Fd)
 	return r;
 }
 
-void gs_close_cond(int Fd)
+void gs_close_cond(int *Fd)
 {
-	if (Fd != -1)
-		close(Fd);
+	if (*Fd != -1) {
+		close(*Fd);
+		*Fd = -1;
+	}
 }
 
 int gs_nix_write_wrapper(int fd, const char *Buf, size_t LenBuf) {
