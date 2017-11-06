@@ -27,6 +27,16 @@
 #define GS_THREAD_LOCAL_DESIGNATOR __thread
 #endif
 
+/* nulling destruction - delete [] P */
+#define GS_DELETE_ARRAY(PTR_PTR_ALLOCATED_WITH_NEW_BRACKET, TYPE_ELT) \
+  do {                                                          \
+    TYPE_ELT **ptr_ptr = (PTR_PTR_ALLOCATED_WITH_NEW_BRACKET);  \
+	if (*ptr_ptr) {                                             \
+	  delete [] *ptr_ptr;                                       \
+	  *ptr_ptr = NULL;                                          \
+	}                                                           \
+  } while (0)
+
 /* nulling destruction - delete P */
 #define GS_DELETE(PTR_PTR_ALLOCATED_WITH_NEW, TYPE) \
   do {                                              \
