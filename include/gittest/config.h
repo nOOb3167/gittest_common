@@ -19,7 +19,9 @@ struct GsConfMap;
 */
 struct GsAuxConfigCommonVars {
 	uint32_t ServPort;
+	uint32_t VServPort;
 	char *ServHostNameBuf; size_t LenServHostName;
+	char *VServHostNameBuf; size_t LenVServHostName;
 	char *RefNameMainBuf; size_t LenRefNameMain;
 	char *RefNameSelfUpdateBuf; size_t LenRefNameSelfUpdate;
 	char *RepoMainPathBuf; size_t LenRepoMainPath;

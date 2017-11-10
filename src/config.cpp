@@ -710,7 +710,9 @@ int gs_config_get_common_vars(
 	GsAuxConfigCommonVars CommonVars = {};
 
 	GS_CONFIG_COMMON_VAR_UINT32_NONUCF(KeyVal, CommonVars, ServPort);
+	GS_CONFIG_COMMON_VAR_UINT32_NONUCF(KeyVal, CommonVars, VServPort);
 	GS_CONFIG_COMMON_VAR_STRING_NONUCF(KeyVal, CommonVars, ServHostName);
+	GS_CONFIG_COMMON_VAR_STRING_NONUCF(KeyVal, CommonVars, VServHostName);
 	GS_CONFIG_COMMON_VAR_STRING_NONUCF(KeyVal, CommonVars, RefNameMain);
 	GS_CONFIG_COMMON_VAR_STRING_NONUCF(KeyVal, CommonVars, RefNameSelfUpdate);
 	GS_CONFIG_COMMON_VAR_STRING_INTERPRET_RELATIVE_CURRENT_EXECUTABLE_NONUCF(KeyVal, CommonVars, RepoMainPath);
