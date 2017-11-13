@@ -711,6 +711,7 @@ int gs_config_get_common_vars(
 
 	GS_CONFIG_COMMON_VAR_UINT32_NONUCF(KeyVal, CommonVars, ServPort);
 	GS_CONFIG_COMMON_VAR_UINT32_NONUCF(KeyVal, CommonVars, VServPort);
+	GS_CONFIG_COMMON_VAR_UINT32_NONUCF(KeyVal, CommonVars, VServPortEnet);
 	GS_CONFIG_COMMON_VAR_STRING_NONUCF(KeyVal, CommonVars, ServHostName);
 	GS_CONFIG_COMMON_VAR_STRING_NONUCF(KeyVal, CommonVars, VServHostName);
 	GS_CONFIG_COMMON_VAR_STRING_NONUCF(KeyVal, CommonVars, RefNameMain);
