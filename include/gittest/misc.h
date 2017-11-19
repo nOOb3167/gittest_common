@@ -121,6 +121,7 @@
 #define GS_GOTO_CLEAN()        do { GS_DBG_LOG(); goto clean; } while(0)
 #define GS_ERR_CLEANSUB(THE_R) do { r = (THE_R); GS_DBG_LOG(); goto cleansub; } while(0)
 #define GS_GOTO_CLEANSUB()     do { GS_DBG_LOG(); goto cleansub; } while(0)
+#define GS_ERR_NO_CLEAN_J(JUMPLABEL, THE_R) do { r = (THE_R); goto noclean_ ## JUMPLABEL; } while(0)
 #define GS_ERR_CLEAN_J(JUMPLABEL, THE_R) do { r = (THE_R); GS_DBG_LOG(); goto clean_ ## JUMPLABEL; } while(0)
 #define GS_GOTO_CLEAN_J(JUMPLABEL)       do { GS_DBG_LOG(); goto clean_ ## JUMPLABEL; } while(0)
 
